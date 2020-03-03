@@ -1,8 +1,9 @@
 type Query {
         users(query: String): [User!]
         posts(query: String): [Post!]
+        myPosts(query: String): [Post!]
         me: User!
-        testPosts: Post!
+        post(id: ID!): Post!
         comments: [Comment!]
     }
 
@@ -22,6 +23,7 @@ type Query {
 type Subscription {
     comment(postId: ID!) : CommentSubscriptionPayload!
     post: PostSubscriptionPayload!
+    myPost: PostSubscriptionPayload!
 }
 
 type AuthPayload {
@@ -42,7 +44,8 @@ type AuthPayload {
 
     input UpdateUserInput {
         name: String,
-        email: String
+        email: String,
+        password: String
     }
 
     input CreatePostInput {
@@ -59,7 +62,6 @@ type AuthPayload {
 
     input CreateCommentInput {
         text: String!,
-        author: ID!,
         postId: ID!
     }
 
@@ -70,7 +72,7 @@ type AuthPayload {
     type User {
         id: ID!,
         name: String!,
-        email: String!,
+        email: String,
         password: String!,
         posts: [Post!]!
         comments: [Comment!]!

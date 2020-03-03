@@ -24,7 +24,7 @@ type Comment implements Node {
   id: ID!
   text: String!
   author(where: UserWhereInput): User!
-  post(where: PostWhereInput): Post!
+  postId(where: PostWhereInput): Post!
 }
 
 """
@@ -46,7 +46,7 @@ type CommentConnection {
 input CommentCreateInput {
   text: String!
   author: UserCreateOneWithoutCommentsInput!
-  post: PostCreateOneWithoutCommentsInput!
+  postId: PostCreateOneWithoutCommentsInput!
 }
 
 input CommentCreateManyWithoutAuthorInput {
@@ -61,7 +61,7 @@ input CommentCreateManyWithoutPostInput {
 
 input CommentCreateWithoutAuthorInput {
   text: String!
-  post: PostCreateOneWithoutCommentsInput!
+  postId: PostCreateOneWithoutCommentsInput!
 }
 
 input CommentCreateWithoutPostInput {
@@ -148,7 +148,7 @@ input CommentSubscriptionWhereInput {
 input CommentUpdateInput {
   text: String
   author: UserUpdateOneWithoutCommentsInput
-  post: PostUpdateOneWithoutCommentsInput
+  postId: PostUpdateOneWithoutCommentsInput
 }
 
 input CommentUpdateManyWithoutAuthorInput {
@@ -171,7 +171,7 @@ input CommentUpdateManyWithoutPostInput {
 
 input CommentUpdateWithoutAuthorDataInput {
   text: String
-  post: PostUpdateOneWithoutCommentsInput
+  postId: PostUpdateOneWithoutCommentsInput
 }
 
 input CommentUpdateWithoutPostDataInput {
@@ -349,7 +349,7 @@ input CommentWhereInput {
   """
   text_not_ends_with: String
   author: UserWhereInput
-  post: PostWhereInput
+  postId: PostWhereInput
 }
 
 input CommentWhereUniqueInput {

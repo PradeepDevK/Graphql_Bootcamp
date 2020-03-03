@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import getUserId from '../utils/getUserId';
+import generateToken from '../utils/generateToken'
+import hashPassword from '../utils/hashPassword'
 
 // const token = jwt.sign({ id : 46}, 'mysecret');
 // console.log('token ', token);
@@ -24,11 +26,7 @@ const Mutation = {
             throw new Error('Email Taken.')
         }
 
-        if (args.data.password.length < 8) {
-            throw new Error('Password must be 8 characters or longer.')
-        }
-
-        const password =  await bcrypt.hash(args.data.password, 10);
+        const password =  await hashPassword(args.data.password)
 
         const user = await prisma.mutation.createUser({
             data: {
@@ -39,7 +37,7 @@ const Mutation = {
 
         return {
             user,
-            'token' : jwt.sign({ 'userId': user.id}, 'thisisasecret')
+            'token' : generateToken(user.id)
         }
     },
     async login(parent, args, {
@@ -62,7 +60,7 @@ const Mutation = {
         
         return {
             user,
-            'token' : jwt.sign({ 'userId': user.id}, 'thisisasecret')
+            'token' : generateToken(user.id)
         }
     },
     async deleteUsers(parent, args, {
@@ -100,6 +98,10 @@ const Mutation = {
 
         if (!userExists) {
             throw new Error('User not found')
+        }
+        
+        if (typeof args.data.password === 'string')  {
+            args.data.password = await hashPassword(args.data.password)
         }
 
         return prisma.mutation.updateUser({
@@ -182,6 +184,12 @@ const Mutation = {
             throw new Error('Post not found')
         }
 
+        const isPublished = await prisma.exists.Post({id: args.id, published: true})
+
+        if (isPublished && args.data.published === false) {
+            await prisma.mutation.deleteManyComments({where: { postId: { id: args.id }}})
+        }
+
         return prisma.mutation.updatePost({
             data: args.data,
             where: {
@@ -195,10 +203,10 @@ const Mutation = {
         prisma,
         request
     }, info) {
-        //const userId = getUserId(request)
+        const userId = getUserId(request)
 
         const userExists = await prisma.exists.User({
-            id: args.data.author
+            id: userId
         })
 
         if (!userExists) {
@@ -206,7 +214,8 @@ const Mutation = {
         }
 
         const postExists = await prisma.exists.Post({
-            id: args.data.postId
+            id: args.data.postId,
+            published: true
         })
 
         if (!postExists) {
@@ -218,7 +227,7 @@ const Mutation = {
                 text: args.data.text,
                 author: {
                     connect: {
-                        id: args.data.author
+                        id: userId
                     }
                 },
                 postId: {
@@ -232,10 +241,16 @@ const Mutation = {
     async deleteComments(parent, args, {
         db,
         pubsub,
-        prisma
+        prisma,
+        request 
     }, info) {
+        const userId = getUserId(request)
+
         const commentExists = await prisma.exists.Comment({
-            id: args.id
+            id: args.id,
+            author : {
+                id: userId
+            }
         })
 
         if (!commentExists) {
@@ -251,10 +266,17 @@ const Mutation = {
     async updateComments(parent, args, {
         db,
         pubsub,
-        prisma
+        prisma, 
+        request
     }, info) {
+
+        const userId = getUserId(request)
+
         const commentExists = await prisma.exists.Comment({
-            id: args.id
+            id: args.id,
+            author: {
+                id: userId
+            }
         })
 
         if (!commentExists) {
